@@ -1,45 +1,64 @@
-from flask import Flask, render_template, request
+import streamlit as st
 import pickle
-
-# Create Flask app
-app = Flask(__name__)
+import numpy as np
 
 # Load trained model
 model = pickle.load(open("model.pkl", "rb"))
 
+# Page Title
+st.title("❤️ Heart Disease Prediction App")
 
-# Home Page
-@app.route("/")
-def home():
-    return render_template("index.html")
+st.write("Fill the patient details below")
 
+# User Inputs
+age = st.number_input("Age", min_value=1, max_value=100)
 
-# Prediction Route
-@app.route("/predict", methods=["POST"])
-def predict():
+trestbps = st.number_input(
+    "Resting Blood Pressure",
+    min_value=50,
+    max_value=250
+)
 
-    age = float(request.form['age'])
-    trestbps = float(request.form['trestbps'])
-    chol = float(request.form['chol'])
-    thalach = float(request.form['thalach'])
-    oldpeak = float(request.form['oldpeak'])
+chol = st.number_input(
+    "Cholesterol Level",
+    min_value=100,
+    max_value=600
+)
 
-    # Create feature list
-    features = [[
+thalach = st.number_input(
+    "Maximum Heart Rate",
+    min_value=50,
+    max_value=250
+)
+
+oldpeak = st.number_input(
+    "Oldpeak Value",
+    min_value=0.0,
+    max_value=10.0,
+    step=0.1
+)
+
+# Prediction Button
+if st.button("Predict"):
+
+    # Prepare features
+    features = np.array([[
         age,
         trestbps,
         chol,
         thalach,
         oldpeak
-    ]]
+    ]])
 
-    # Predict
+    # Prediction
     prediction = model.predict(features)
 
     # High Risk
     if prediction[0] == 1:
 
-        result = "High Risk of Heart Disease"
+        st.error("⚠️ High Risk of Heart Disease")
+
+        st.subheader("Health Tips")
 
         tips = [
             "Avoid smoking and alcohol",
@@ -51,10 +70,15 @@ def predict():
             "Avoid sugary drinks"
         ]
 
+        for tip in tips:
+            st.write("✅", tip)
+
     # Low Risk
     else:
 
-        result = "Low Risk of Heart Disease"
+        st.success("✅ Low Risk of Heart Disease")
+
+        st.subheader("Health Tips")
 
         tips = [
             "Maintain healthy lifestyle",
@@ -64,13 +88,5 @@ def predict():
             "Do regular health checkups"
         ]
 
-    return render_template(
-        "index.html",
-        prediction_text=result,
-        health_tips=tips
-    )
-
-
-# Run app
-if __name__ == "__main__":
-    app.run(debug=True)
+        for tip in tips:
+            st.write("✅", tip)
